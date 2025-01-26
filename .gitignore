@@ -1,0 +1,13 @@
+# Ignore everything
+*
+
+# Don't ignore directories (so we can track .R, .md, .Rproj inside subfolders)
+!*/
+
+# Do not ignore the following file types
+!*.R
+!*.md
+!*.Rproj
+
+# Ensure .gitignore itself is not ignored
+!.gitignore
