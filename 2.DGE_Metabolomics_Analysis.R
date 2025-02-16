@@ -263,5 +263,3 @@ go_cc_genesets = go_cc_genesets[go_cc_genesets$gene_symbol %in% hs_kegg_df_kit$g
 go_cc_genesets = go_cc_genesets[go_cc_genesets$gene_symbol %in% c("SDHA","SDHB","SDHC","SDHD"),]
 write.csv(go_cc_genesets,"RESULTS/celullar_components_with_SDH.csv")
 
-
-

@@ -195,9 +195,9 @@ print(p)
 
 # Convert voom_dataframe from wide to long format
 voom_long <- voom_dataframe %>%
-  dplyr::select(subtype, SDHB, SDHC, SDHD) %>%
+  dplyr::select(subtype, SDHA, SDHB, SDHC, SDHD) %>%
   tidyr::pivot_longer(
-    cols = c(SDHB, SDHC, SDHD),   # The genes you want to plot
+    cols = c(SDHA, SDHB, SDHC, SDHD),   # The genes you want to plot
     names_to = "Gene",            # New column that will store gene names
     values_to = "Expression"      # New column that will store expression values
   )
@@ -208,7 +208,7 @@ p <- ggplot(voom_long, aes(x = subtype, y = Expression, fill = subtype)) +
   geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA) +
   theme_pubr() +
   labs(x = "", y = "Expression (Voom Normalized)") +
-  facet_wrap(~Gene, ncol = 3) +            # Facet by Gene; 3 columns side by side
+  facet_wrap(~Gene, ncol = 4) +            # Facet by Gene; 3 columns side by side
   theme(legend.position = "none")          # Remove legend if not needed
 
 print(p)
