@@ -77,10 +77,10 @@ for(coefi in 1:3){
   title = ''
   if (coefi == 1) {
     title <- "LMS vs DDLPS"
-    write.csv(df_to_save, "RESULTS/deg_tga_leiomyo_lipo.csv")
+    write.csv(df_to_save, "RESULTS/deg_tcga_leiomyo_lipo.csv")
   } else if (coefi == 2) {
     title <- "UPS vs LMS"
-    write.csv(df_to_save, "RESULTS/deg_tga_ups_leiomyo.csv")
+    write.csv(df_to_save, "RESULTS/deg_tcga_ups_leiomyo.csv")
   } else if (coefi == 3) {
     title <- "UPS vs DDLPS"
     write.csv(df_to_save, "RESULTS/deg_tcga_ups_lipo.csv")
