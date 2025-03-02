@@ -27,13 +27,13 @@ RNA <- RNA[,common_patients]
 
 RNA <- data.frame(t(RNA))
 
-clinical_data_clean$SDHB <- as.numeric(RNA$SDHB)
-clinical_data_clean$SDHC <- as.numeric(RNA$SDHC)
-clinical_data_clean$SDHD <- as.numeric(RNA$SDHD)
+clinical_data_clean$SDHB_val <- as.numeric(RNA$SDHB)
+clinical_data_clean$SDHC_val <- as.numeric(RNA$SDHC)
+clinical_data_clean$SDHD_val <- as.numeric(RNA$SDHD)
 
 
 #no significant results comparing subtypes
-clinical_data_clean$SDHB <- ifelse(clinical_data_clean$SDHB > mean(clinical_data_clean$SDHB), "High", "Low")
+clinical_data_clean$SDHB <- ifelse(clinical_data_clean$SDHB_val > mean(clinical_data_clean$SDHB_val), "High", "Low")
 
 km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean)
 
@@ -43,14 +43,11 @@ x
 
 clinical_data_clean <- clinical_data_clean[clinical_data_clean$`Sarcoma Histopathological Subtype` == "UPS",]
 
-clinical_data_clean$SDHB <- ifelse(clinical_data_clean$SDHB > mean(clinical_data_clean$SDHB), "High", "Low")
+clinical_data_clean$SDHB <- ifelse(clinical_data_clean$SDHB_val > mean(clinical_data_clean$SDHB_val), "High", "Low")
 
 km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
                 title = "Overall Survival SDHB")
-
 x
-
-
 

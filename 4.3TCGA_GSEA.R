@@ -56,5 +56,7 @@ ridgeplot(deg2_gsea, label_format = 50)
 heatplot(deg2_gsea, foldChange = gene_list,showCategory = 20)
 barplot(deg2_gsea,x="qscore")
 
+deg2_gsea
+
 cnetplot(deg2_gsea,foldChange = gene_list,showCategory = 5)
 

@@ -105,7 +105,7 @@ for(coefi in 1:3){
   }
   
   for (i in 1:length(rownames(deg))) {
-    if (y[i] <= 0.05) {
+    if (y[i] <= 0.05){ # && x[i] %in% c("SDHA", "SDHB", "SDHC", "SDHD")
       #x[i] <- ""
       df <- rbind(df, c(x[i],y[i], log[i]))
     } else{
@@ -114,6 +114,10 @@ for(coefi in 1:3){
   }
   colnames(df) <- names
   row.names(df) <- df$RowNames
+  print(title)
+  print(length(row.names(df)))
+  
+  #print(mean(deg$logFC))
   
   vulcano <- EnhancedVolcano(
     deg,
@@ -123,14 +127,23 @@ for(coefi in 1:3){
     xlim = c(-8,8),
     ylim = c(0,30),
     labSize = 3.0,
-    FCcutoff = 0.85,
+    FCcutoff = 0.5,
     pCutoff = 1e-02,
     title = title,
     legendPosition = 'none',
-    drawConnectors = F,
+    drawConnectors = T,
     max.overlaps = 100
   )
   vulcano_plots[[coefi]] <- vulcano
+  
+  deg <- deg[deg$adj.P.Val<0.05,]
+  
+  deg_positives <- deg[deg$logFC>0.0,]
+  deg_negatives <- deg[deg$logFC<0.0,]
+  
+  print(mean(deg_positives$logFC))
+  print(mean(deg_negatives$logFC))
+  
 }
 x <- vulcano_plots[[1]]
 y <- vulcano_plots[[2]]

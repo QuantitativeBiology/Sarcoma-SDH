@@ -85,7 +85,7 @@ for(coefi in 1:3){
     title <- "UPS vs DDLPS"
     write.csv(df_to_save, "RESULTS/deg_tcga_ups_lipo.csv")
   }
-  
+  print(title)
   for (i in 1:length(rownames(deg))) {
     if (y[i] <= 0.05) {
       #x[i] <- ""
@@ -117,6 +117,24 @@ for(coefi in 1:3){
   sign <- df_to_save[df_to_save$adj.P.Val <= 0.05,]
   
   print("SDHB" %in% row.names(sign))
+  
+  deg <- deg[deg$adj.P.Val<0.05,]
+  
+  print("Mean of LOGFC")
+  print(mean(deg$logFC))
+  
+  deg_positives <- deg[deg$logFC>0.0,]
+  deg_negatives <- deg[deg$logFC<0.0,]
+  #print(deg_positives)
+  
+  print("Number of DEGS")
+  print(length(row.names(deg_positives)) + length(row.names(deg_negatives)))
+  
+  print("Mean of over")
+  print(mean(deg_positives$logFC))
+  
+  print("Mean of under")
+  print(mean(deg_negatives$logFC))
 }
 x <- vulcano_plots[[1]]
 y <- vulcano_plots[[2]]
@@ -160,32 +178,28 @@ voom_df$DEATH <- clinical_data$Status
 
 voom_df$original_class <- clinical_data$Histology
 
+voom_df$SDHB_exp <- voom_df$SDHB
+
 # All Subtypes
-voom_df$SDHB <- ifelse(voom_df$SDHB > mean(voom_df$SDHB), "High", "Low")
+voom_df$SDHB <- ifelse(voom_df$SDHB_exp > mean(voom_df$SDHB_exp), "High", "Low")
 
 km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY,DEATH ) ~ SDHB, data=voom_df)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
                 title = "Overall Survival SDHB")
+
+x
 
 # Just UPS
 voom_df <- voom_df[voom_df$subtype == "UPS",]
 
-voom_df$SDHB <- ifelse(voom_df$SDHB > mean(voom_df$SDHB), "High", "Low")
+voom_df$SDHB <- ifelse(voom_df$SDHB_exp > mean(voom_df$SDHB_exp), "High", "Low")
 
-km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY,DEATH ) ~ SDHB, data=voom_df)
+km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY,DEATH) ~ SDHB, data=voom_df)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
                 title = "Overall Survival SDHB")
-
-
-
-
-
-
-
-
-
+x
 
 # Count the number of "High" occurrences for each original class
 sdhb_counts <- table(voom_df$original_class[voom_df$SDHB == "High"])

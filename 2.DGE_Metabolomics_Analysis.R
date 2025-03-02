@@ -192,7 +192,7 @@ final_result <- final_result[final_result$kit_gene_counts != 0,]
 final_result <- final_result[order(final_result$genes_involved_in_pathway, decreasing = TRUE),]
 
 
-final_result <- final_result[final_result$kit_gene_counts > 1 ,]
+final_result <- final_result[final_result$kit_gene_counts > 2 ,]
 
 ggplot(final_result, aes(x = reorder(pathway, -genes_involved_in_pathway))) +
   geom_bar(aes(y = genes_involved_in_pathway), stat = "identity", fill = "blue", width = 0.5) +
