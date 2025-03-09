@@ -264,7 +264,13 @@ voom_df$DEATH <- clinical_data$Status
 
 voom_df$original_class <- clinical_data$Histology
 
+voom_df$Paper_Histology <- clinical_data$PaperHistology
+
+voom_df$FNCLCC_GRADE <- as.character(clinical_data$FNCLCC_GRADE)
+
 voom_df$SDHB_exp <- voom_df$SDHB
+
+voom_df$Gender <- clinical_data$Gender
 
 # All Subtypes
 voom_df$SDHB <- ifelse(voom_df$SDHB_exp > mean(voom_df$SDHB_exp), "High", "Low")
@@ -274,7 +280,8 @@ km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY,DEATH ) ~ SDHB, data=voom_df)
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
                 title = "Overall Survival SDHB")
 
-x
+cox <- coxph(Surv(TIME_DEATH_FROM_SURGERY, DEATH) ~ FNCLCC_GRADE + Paper_Histology + SDHB + Gender , data = voom_df)
+ggforest(cox, fontsize = 1)
 
 # Just UPS
 voom_df <- voom_df[voom_df$subtype == "UPS",]
@@ -286,5 +293,8 @@ km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY,DEATH) ~ SDHB, data=voom_df)
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
                 title = "Overall Survival SDHB: Only UPS")
 x
+
+cox <- coxph(Surv(TIME_DEATH_FROM_SURGERY, DEATH) ~ FNCLCC_GRADE + SDHB + Gender , data = voom_df)
+ggforest(cox, fontsize = 1)
 
 
