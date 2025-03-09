@@ -299,6 +299,5 @@ for (gene in genes) {
     note = c("Limma-Voom Differential expression results")
   )
   
-  # uncomment to print tables
-  #print(x)
+  print(x)
 }
