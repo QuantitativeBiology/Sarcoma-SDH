@@ -67,3 +67,4 @@ barplot(go_enrich_nos_lipo_over, title= "UPS vs DDLPS", showCategory = 20)
 barplot(go_enrich_nos_leiomyo_over, title= "UPS vs LMS", showCategory = 20)
 barplot(go_enrich_leiomyo_lipo_over, title= "LMS vs DDLPS", showCategory = 20)
 
+

@@ -27,13 +27,18 @@ RNA <- RNA[,common_patients]
 
 RNA <- data.frame(t(RNA))
 
+clinical_data_clean$SDHA_val <- as.numeric(RNA$SDHA)
 clinical_data_clean$SDHB_val <- as.numeric(RNA$SDHB)
 clinical_data_clean$SDHC_val <- as.numeric(RNA$SDHC)
 clinical_data_clean$SDHD_val <- as.numeric(RNA$SDHD)
 
 
 #no significant results comparing subtypes
+clinical_data_clean$SDHA <- ifelse(clinical_data_clean$SDHA_val > mean(clinical_data_clean$SDHA_val), "High", "Low")
 clinical_data_clean$SDHB <- ifelse(clinical_data_clean$SDHB_val > mean(clinical_data_clean$SDHB_val), "High", "Low")
+clinical_data_clean$SDHC <- ifelse(clinical_data_clean$SDHC_val > mean(clinical_data_clean$SDHC_val), "High", "Low")
+clinical_data_clean$SDHD <- ifelse(clinical_data_clean$SDHD_val > mean(clinical_data_clean$SDHD_val), "High", "Low")
+
 
 km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean)
 
@@ -41,13 +46,21 @@ x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE,
                 title = "Overall Survival SDHB")
 x
 
-clinical_data_clean <- clinical_data_clean[clinical_data_clean$`Sarcoma Histopathological Subtype` == "UPS",]
+clinical_data_clean$`Local Recurrence` <- as.character(clinical_data_clean$`Local Recurrence`)
 
-clinical_data_clean$SDHB <- ifelse(clinical_data_clean$SDHB_val > mean(clinical_data_clean$SDHB_val), "High", "Low")
+cox <- coxph(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~  Gender + `Sarcoma Histopathological Subtype` + SDHB +  `Neo Adjuvant / Adjuvant Treatment` + `Local Recurrence`  , data = clinical_data_clean)
+ggforest(cox)
 
-km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean)
+
+clinical_data_clean_ups <- clinical_data_clean[clinical_data_clean$`Sarcoma Histopathological Subtype` == "UPS",]
+
+clinical_data_clean_ups$SDHB <- ifelse(clinical_data_clean_ups$SDHB_val > mean(clinical_data_clean_ups$SDHB_val), "High", "Low")
+
+km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean_ups)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
-                title = "Overall Survival SDHB")
+                title = "Overall Free Survival SDHB: UPS")
 x
+
+
 

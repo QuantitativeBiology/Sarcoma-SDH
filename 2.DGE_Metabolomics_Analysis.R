@@ -213,34 +213,32 @@ gg <- ggplot(final_result, aes(x = reorder(pathway, -kit_gene_counts), text = pa
   geom_bar(aes(y = leiomyo_lipo_gene_counts), stat = "identity", fill = "orange", width = 0.5) +
   geom_text(aes(y = kit_gene_counts, label = kit_gene_counts), vjust = -0.2, color = "black") +
   geom_text(aes(y = leiomyo_lipo_gene_counts, label = leiomyo_lipo_gene_counts), vjust = -0.2, color = "black") +
-  labs(title = "Concordance between Genes from Kit in Pathways and DGE genes Leiomyo Lipo", x = "Pathway", y = "Number of Genes") +
+  labs(title = "Genes from Kit in Pathways and DGE genes LMS DDLPS", x = "Pathway", y = "Number of Genes") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
 
-ggplotly(gg)
+#ggplotly(gg)
 
 gg2 <- ggplot(final_result, aes(x = reorder(pathway, -kit_gene_counts), text = paste("Normal:", genes_nos_leiomyo_commonly_expressed," DGE: ",genes_nos_leiomyo))) +
   geom_bar(aes(y = kit_gene_counts), stat = "identity", fill = "lightblue", width = 0.5) +
   geom_bar(aes(y = nos_leiomyo_gene_counts), stat = "identity", fill = "orange", width = 0.5) +
   geom_text(aes(y = kit_gene_counts, label = kit_gene_counts), vjust = -0.2, color = "black") +
   geom_text(aes(y = nos_leiomyo_gene_counts, label = nos_leiomyo_gene_counts), vjust = -0.2, color = "black") +
-  labs(title = "Concordance between Genes from Kit in Pathways and DGE genes NOS Leiomyo", x = "Pathway", y = "Number of Genes") +
+  labs(title = "Genes from Kit in Pathways and DGE genes UPS LMS", x = "Pathway", y = "Number of Genes") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggplotly(gg2)
+#ggplotly(gg2)
 
 gg3 <- ggplot(final_result, aes(x = reorder(pathway, -kit_gene_counts), text = paste("Normal:", genes_nos_lipo_commonly_expressed," DGE: ",genes_nos_lipo))) +
   geom_bar(aes(y = kit_gene_counts), stat = "identity", fill = "lightblue", width = 0.5) +
   geom_bar(aes(y = nos_lipo_gene_counts), stat = "identity", fill = "orange", width = 0.5) +
   geom_text(aes(y = kit_gene_counts, label = kit_gene_counts), vjust = -0.2, color = "black") +
   geom_text(aes(y = nos_lipo_gene_counts, label = nos_lipo_gene_counts), vjust = -0.2, color = "black") +
-  labs(title = "Concordance between Genes from Kit in Pathways and DGE genes NOS Lipo", x = "Pathway", y = "Number of Genes") +
+  labs(title = "Genes from Kit in Pathways and DGE genes UPS DDLPS", x = "Pathway", y = "Number of Genes") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
-ggplotly(gg3)
-
-
-grid.arrange(gg,gg2,gg3,ncol =3)
+#ggplotly(gg3)
+gridExtra::grid.arrange(gg,gg2,gg3,ncol =3)
 
 write.csv(final_result, "RESULTS/Metabolic_Pathway_information.csv")
 nice_table(

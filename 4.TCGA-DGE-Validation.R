@@ -15,6 +15,8 @@ library(clusterProfiler)
 library (enrichplot)
 library(gplots)
 
+library(rempsyc)
+
 RNA_data <- read.csv("FILES/TCGA-SARC.csv",row.names=1)
 
 clinical_data <- read.csv("FILES/TCGA-SARC-CLINICAL.csv",row.names=1)
@@ -64,6 +66,13 @@ vfit <- lmFit(Voom, design)
 vfit  <- contrasts.fit(vfit,cont.matrix)
 efit <- eBayes(vfit)
 
+metabolic_genes <- read.csv("RESULTS/METABOLIC_GENES_IN_KIT.csv")
+
+deg_leiomyo_lipo <- NULL
+deg_ups_leiomyo <- NULL
+deg_ups_lipo <- NULL
+
+
 vulcano_plots <- list()
 for(coefi in 1:3){
   deg <- topTable(efit, coef = coefi,adjust.method = 'fdr', number=Inf)
@@ -78,16 +87,19 @@ for(coefi in 1:3){
   if (coefi == 1) {
     title <- "LMS vs DDLPS"
     write.csv(df_to_save, "RESULTS/deg_tcga_leiomyo_lipo.csv")
+    deg_leiomyo_lipo <- df_to_save
   } else if (coefi == 2) {
     title <- "UPS vs LMS"
     write.csv(df_to_save, "RESULTS/deg_tcga_ups_leiomyo.csv")
+    deg_ups_leiomyo <- df_to_save
   } else if (coefi == 3) {
     title <- "UPS vs DDLPS"
     write.csv(df_to_save, "RESULTS/deg_tcga_ups_lipo.csv")
+    deg_ups_lipo <- df_to_save
   }
   print(title)
   for (i in 1:length(rownames(deg))) {
-    if (y[i] <= 0.05) {
+    if (y[i] <= 0.05 & x[i] %in% metabolic_genes$gene_symbol) {
       #x[i] <- ""
       df <- rbind(df, c(x[i],y[i], log[i]))
     } else{
@@ -109,30 +121,30 @@ for(coefi in 1:3){
     pCutoff = 1e-02,
     title = title,
     legendPosition = 'none',
-    drawConnectors = F,
+    drawConnectors = T,
     max.overlaps = 100
   )
   vulcano_plots[[coefi]] <- vulcano
-  
+
   sign <- df_to_save[df_to_save$adj.P.Val <= 0.05,]
-  
+
   print("SDHB" %in% row.names(sign))
-  
+
   deg <- deg[deg$adj.P.Val<0.05,]
-  
+
   print("Mean of LOGFC")
   print(mean(deg$logFC))
-  
+
   deg_positives <- deg[deg$logFC>0.0,]
   deg_negatives <- deg[deg$logFC<0.0,]
   #print(deg_positives)
-  
+
   print("Number of DEGS")
   print(length(row.names(deg_positives)) + length(row.names(deg_negatives)))
-  
+
   print("Mean of over")
   print(mean(deg_positives$logFC))
-  
+
   print("Mean of under")
   print(mean(deg_negatives$logFC))
 }
@@ -141,6 +153,66 @@ y <- vulcano_plots[[2]]
 z <- vulcano_plots[[3]]
 gridExtra::grid.arrange(x,y,z, ncol = 3)
 
+# List of genes to extract
+genes <- c("SDHA", "SDHB", "SDHC", "SDHD")
+
+# Prepare a list to store dataframes for each gene
+deg_tables <- list()
+
+# Iterate over each gene and extract data
+for (gene in genes) {
+  # Extract rows for the current gene
+  deg_leiomyo_lipo$genes <- row.names(deg_leiomyo_lipo)
+  deg_ups_leiomyo$genes <- row.names(deg_ups_leiomyo)
+  deg_ups_lipo$genes <- row.names(deg_ups_lipo)
+  
+  leiomyo_lipo <- deg_leiomyo_lipo[deg_leiomyo_lipo$genes == gene,]
+  ups_leiomyo <- deg_ups_leiomyo[deg_ups_leiomyo$genes == gene,]
+  ups_lipo <- deg_ups_lipo[deg_ups_lipo$genes == gene,]
+  
+  ups_lms_p_value <- as.character(round(ups_leiomyo$adj.P.Val, 3))
+  if ( ups_lms_p_value == 0){
+    ups_lms_p_value <- "<0.001"
+  }
+  
+  ups_ddlps_p_value <- as.character(round(ups_lipo$adj.P.Val, 3))
+  if ( ups_ddlps_p_value == 0){
+    ups_ddlps_p_value <- "<0.001"
+  }
+
+  # Extract and round adj_p_values and logfc_values
+  adj_p_values <- c(
+    as.character(round(leiomyo_lipo$adj.P.Val, 3)), 
+    ups_lms_p_value, 
+    ups_ddlps_p_value
+  )
+
+  logfc_values <- c(
+    as.character(round(leiomyo_lipo$logFC, 3)), 
+    as.character(round(ups_leiomyo$logFC, 3)), 
+    as.character(round(ups_lipo$logFC, 3))
+  )
+  
+  # Create a dataframe for the current gene
+  df <- data.frame(
+    Comparison = c("LMS VS DDLPS", "UPS vs LMS", "UPS vs DDLPS"),
+    adj_p_value = adj_p_values,
+    logfc = logfc_values
+  )
+  
+  # Store the dataframe in the list
+  deg_tables[[gene]] <- df
+  
+  # Print the table using nice_table
+  print(paste(gene, "Differential Gene Expression"))
+  x <- nice_table(
+    df,
+    title = paste(gene, "Differential Gene Expression"),
+    note = c("Limma-Voom Differential expression results")
+  )
+  
+  print(x)
+}
 
 all(colnames(voom_df) == clinical_data$Patient)
 
@@ -154,21 +226,35 @@ voom_df$subtype <- ifelse(voom_df$subtype  == "leiomyosarcoma - soft tissue" , "
 voom_df$subtype <- ifelse(voom_df$subtype  == "undifferentiated pleomorphic sarcoma" , "UPS", voom_df$subtype)
 
 voom_long <- voom_df %>%
-  dplyr::select(subtype, SDHB, SDHC, SDHD) %>%
+  dplyr::select(subtype, SDHA,SDHB, SDHC, SDHD) %>%
   tidyr::pivot_longer(
-    cols = c(SDHB, SDHC, SDHD),   # The genes you want to plot
+    cols = c(SDHA,SDHB, SDHC, SDHD),   # The genes you want to plot
     names_to = "Gene",            # New column that will store gene names
     values_to = "Expression"      # New column that will store expression values
   )
 
 
+# Define a colorblind-friendly palette
+palette <- brewer.pal(8, "Set2")
+
+# Enhanced plot for Nature publication with fixed y-axis
 p <- ggplot(voom_long, aes(x = subtype, y = Expression, fill = subtype)) +
-  geom_violin(trim = FALSE, alpha = 0.7) +
-  geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA) +
-  theme_pubr() +
+  geom_violin(trim = FALSE, alpha = 0.6, color = "black", size = 0.4) +  # Adjust alpha and outline
+  geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA, color = "black", size = 0.3) +
+  scale_fill_manual(values = palette) +  # Apply custom color palette
+  theme_classic() +  # Use a clean theme
   labs(x = "", y = "Expression (Voom Normalized)") +
-  facet_wrap(~Gene, ncol = 3) +            # Facet by Gene; 3 columns side by side
-  theme(legend.position = "none")          # Remove legend if not needed
+  facet_wrap(~Gene, ncol = 4, scales = "fixed") +  # Fixed y-axis across plots
+  theme(
+    legend.position = "none",  # Remove legend if not needed
+    strip.text = element_text(size = 10, face = "bold"),  # Facet labels
+    axis.text = element_text(size = 9),  # Axis labels
+    axis.title = element_text(size = 10, face = "bold"),  # Axis titles
+    plot.title = element_text(size = 12, face = "bold"),  # Plot title
+    axis.line = element_line(size = 0.5, color = "black"),  # Axis lines
+    strip.background = element_blank(),  # Clean facet background
+    panel.spacing = unit(0.5, "lines")  # Adjust spacing between facets
+  )
 
 print(p)
 
@@ -198,37 +284,7 @@ voom_df$SDHB <- ifelse(voom_df$SDHB_exp > mean(voom_df$SDHB_exp), "High", "Low")
 km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY,DEATH) ~ SDHB, data=voom_df)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
-                title = "Overall Survival SDHB")
+                title = "Overall Survival SDHB: Only UPS")
 x
 
-# Count the number of "High" occurrences for each original class
-sdhb_counts <- table(voom_df$original_class[voom_df$SDHB == "High"])
 
-# Convert to dataframe for ggplot
-sdhb_df <- as.data.frame(sdhb_counts)
-colnames(sdhb_df) <- c("Original_Class", "High_Count")
-
-# Plot using ggplot2
-ggplot(sdhb_df, aes(x = reorder(Original_Class, -High_Count), y = High_Count)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  theme_minimal() +
-  labs(title = "Number of SDHB High Cases per Original Class",
-       x = "Original Class",
-       y = "Count of SDHB High") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# Count the number of "High" occurrences for each original class
-sdhb_counts <- table(voom_df$original_class[voom_df$SDHB == "Low"])
-
-# Convert to dataframe for ggplot
-sdhb_df <- as.data.frame(sdhb_counts)
-colnames(sdhb_df) <- c("Original_Class", "High_Count")
-
-# Plot using ggplot2
-ggplot(sdhb_df, aes(x = reorder(Original_Class, -High_Count), y = High_Count)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  theme_minimal() +
-  labs(title = "Number of SDHB Low Cases per Original Class",
-       x = "Original Class",
-       y = "Count of SDHB Low") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))

@@ -11,3 +11,4 @@
 
 # Ensure .gitignore itself is not ignored
 !.gitignore
+.Rproj.user

@@ -8,6 +8,8 @@ library(ggplot2)
 library(ggpubr)
 library(tidyr)
 library(ggpubr)
+library(RColorBrewer)
+library(rempsyc)
 
 # Define output file path
 output_file <- "FILES/normalized_counts.csv"
@@ -82,6 +84,12 @@ vfit  <- contrasts.fit(vfit,cont.matrix)
 efit <- eBayes(vfit)
 plotSA(efit, main = 'final model: Mean-Variance trend')
 
+metabolic_genes <- read.csv("RESULTS/METABOLIC_GENES_IN_KIT.csv")
+
+deg_leiomyo_lipo <- NULL
+deg_ups_leiomyo <- NULL
+deg_ups_lipo <- NULL
+
 vulcano_plots <- list()
 for(coefi in 1:3){
   deg <- topTable(efit, coef = coefi,adjust.method = 'fdr', number=Inf)
@@ -95,17 +103,20 @@ for(coefi in 1:3){
   title = ''
   if (coefi == 1) {
     title <- "LMS vs DDLPS"
+    deg_leiomyo_lipo <- df_to_save
     write.csv(df_to_save, "RESULTS/deg_leiomyo_lipo.csv")
   } else if (coefi == 2) {
     title <- "UPS vs LMS"
+    deg_ups_leiomyo <- df_to_save
     write.csv(df_to_save, "RESULTS/deg_ups_leiomyo.csv")
   } else if (coefi == 3) {
     title <- "UPS vs DDLPS"
+    deg_ups_lipo <- df_to_save
     write.csv(df_to_save, "RESULTS/deg_ups_lipo.csv")
   }
   
   for (i in 1:length(rownames(deg))) {
-    if (y[i] <= 0.05){ # && x[i] %in% c("SDHA", "SDHB", "SDHC", "SDHD")
+    if (y[i] <= 0.05 && x[i] %in% metabolic_genes$gene_symbol){
       #x[i] <- ""
       df <- rbind(df, c(x[i],y[i], log[i]))
     } else{
@@ -216,13 +227,78 @@ voom_long <- voom_dataframe %>%
   )
 
 
+# Define a colorblind-friendly palette
+palette <- brewer.pal(8, "Set2")
+
+# Enhanced plot for Nature publication with fixed y-axis
 p <- ggplot(voom_long, aes(x = subtype, y = Expression, fill = subtype)) +
-  geom_violin(trim = FALSE, alpha = 0.7) +
-  geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA) +
-  theme_pubr() +
+  geom_violin(trim = FALSE, alpha = 0.6, color = "black", size = 0.4) +  # Adjust alpha and outline
+  geom_boxplot(width = 0.2, fill = "white", outlier.shape = NA, color = "black", size = 0.3) +
+  scale_fill_manual(values = palette) +  # Apply custom color palette
+  theme_classic() +  # Use a clean theme
   labs(x = "", y = "Expression (Voom Normalized)") +
-  facet_wrap(~Gene, ncol = 4) +            # Facet by Gene; 3 columns side by side
-  theme(legend.position = "none")          # Remove legend if not needed
+  facet_wrap(~Gene, ncol = 4, scales = "fixed") +  # Fixed y-axis across plots
+  theme(
+    legend.position = "none",  # Remove legend if not needed
+    strip.text = element_text(size = 10, face = "bold"),  # Facet labels
+    axis.text = element_text(size = 9),  # Axis labels
+    axis.title = element_text(size = 10, face = "bold"),  # Axis titles
+    plot.title = element_text(size = 12, face = "bold"),  # Plot title
+    axis.line = element_line(size = 0.5, color = "black"),  # Axis lines
+    strip.background = element_blank(),  # Clean facet background
+    panel.spacing = unit(0.5, "lines")  # Adjust spacing between facets
+  )
 
 print(p)
 
+# List of genes to extract
+genes <- c("SDHA", "SDHB", "SDHC", "SDHD")
+
+# Prepare a list to store dataframes for each gene
+deg_tables <- list()
+
+# Iterate over each gene and extract data
+for (gene in genes) {
+  # Extract rows for the current gene
+  deg_leiomyo_lipo$genes <- row.names(deg_leiomyo_lipo)
+  deg_ups_leiomyo$genes <- row.names(deg_ups_leiomyo)
+  deg_ups_lipo$genes <- row.names(deg_ups_lipo)
+  
+  leiomyo_lipo <- deg_leiomyo_lipo[deg_leiomyo_lipo$genes == gene,]
+  ups_leiomyo <- deg_ups_leiomyo[deg_ups_leiomyo$genes == gene,]
+  ups_lipo <- deg_ups_lipo[deg_ups_lipo$genes == gene,]
+  
+  # Extract and round adj_p_values and logfc_values
+  adj_p_values <- c(
+    as.character(round(leiomyo_lipo$adj.P.Val, 3)), 
+    as.character(round(ups_leiomyo$adj.P.Val, 3)), 
+    as.character(round(ups_lipo$adj.P.Val, 3))
+  )
+  
+  logfc_values <- c(
+    as.character(round(leiomyo_lipo$logFC, 3)), 
+    as.character(round(ups_leiomyo$logFC, 3)), 
+    as.character(round(ups_lipo$logFC, 3))
+  )
+  
+  # Create a dataframe for the current gene
+  df <- data.frame(
+    Comparison = c("LMS VS DDLPS", "UPS vs LMS", "UPS vs DDLPS"),
+    adj_p_value = adj_p_values,
+    logfc = logfc_values
+  )
+  
+  # Store the dataframe in the list
+  deg_tables[[gene]] <- df
+  
+  # Print the table using nice_table
+  print(paste(gene, "Differential Gene Expression"))
+  x <- nice_table(
+    df,
+    title = paste(gene, "Differential Gene Expression"),
+    note = c("Limma-Voom Differential expression results")
+  )
+  
+  # uncomment to print tables
+  #print(x)
+}

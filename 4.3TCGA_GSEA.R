@@ -50,13 +50,70 @@ gene_list = sort(gene_list, decreasing = TRUE)
 hs_kegg_df <- hs_kegg_df[,c("gs_name","gene_symbol")]
 deg2_gsea <- GSEA(geneList = gene_list,TERM2GENE = hs_kegg_df)
 
+# Define the pathways to remove
+pathways_to_remove <- c(
+  "KEGG_AUTOIMUNE_THYROID_DISEASE",
+  "KEGG_TYPE_I_DIABETES_MELLITUS",
+  "KEGG_ASTHMA",
+  "KEGG_VIRAL_MYOCARDITIS",
+  "KEGG_AMYOTROPHIC_LATERAL_SCLEROSIS",
+  "KEGG_ALDOSTERONE_REGULATED_SODIUM_REABSORPTION",
+  "KEGG_GLIOMA",
+  "KEGG_MELANOMA",
+  "KEGG_COMPLEMENT_AND_COAGULATION",
+  "KEGG_AXON_GUIDANCE",
+  "KEGG_NEUROACTIVE_LIGAND_RECEPTOR_INTERACTION",
+  "KEGG_PARKINSONS_DISEASE",
+  "KEGG_CHRONIC_MYELOID_LEUKEMIA"
+)
+
+print(row.names(rownames(deg2_gsea@result)))
+
+# Remove the specified pathways
+data <- deg2_gsea@result[!rownames(deg2_gsea@result) %in% pathways_to_remove, ]
+
+deg2_gsea@result <- data
+
+ridgeplot(deg2_gsea, label_format = 50,showCategory = 15)
 
 
-ridgeplot(deg2_gsea, label_format = 50)
-heatplot(deg2_gsea, foldChange = gene_list,showCategory = 20)
-barplot(deg2_gsea,x="qscore")
+hs_kegg_df <- msigdbr(species = "Homo sapiens") %>%
+  dplyr::filter(
+    gs_cat == "C2", # This is to filter only to the C2 curated gene sets
+    gs_subcat == "CP:KEGG" # This is because we only want KEGG pathways
+  )
 
-deg2_gsea
+gene_list <- dge_ups_lipo$logFC
+names(gene_list) <- row.names(dge_ups_lipo)
+gene_list = sort(gene_list, decreasing = TRUE)
+hs_kegg_df <- hs_kegg_df[,c("gs_name","gene_symbol")]
+deg2_gsea <- GSEA(geneList = gene_list,TERM2GENE = hs_kegg_df)
 
-cnetplot(deg2_gsea,foldChange = gene_list,showCategory = 5)
+# Define the pathways to remove
+pathways_to_remove <- c(
+  "KEGG_AUTOIMUNE_THYROID_DISEASE",
+  "KEGG_TYPE_I_DIABETES_MELLITUS",
+  "KEGG_ASTHMA",
+  "KEGG_VIRAL_MYOCARDITIS",
+  "KEGG_AMYOTROPHIC_LATERAL_SCLEROSIS",
+  "KEGG_ALDOSTERONE_REGULATED_SODIUM_REABSORPTION",
+  "KEGG_GLIOMA",
+  "KEGG_MELANOMA",
+  "KEGG_COMPLEMENT_AND_COAGULATION",
+  "KEGG_AXON_GUIDANCE",
+  "KEGG_NEUROACTIVE_LIGAND_RECEPTOR_INTERACTION",
+  "KEGG_PARKINSONS_DISEASE",
+  "KEGG_CHRONIC_MYELOID_LEUKEMIA"
+)
+
+print(row.names(rownames(deg2_gsea@result)))
+
+# Remove the specified pathways
+data <- deg2_gsea@result[!rownames(deg2_gsea@result) %in% pathways_to_remove, ]
+
+
+deg2_gsea@result <- data
+
+ridgeplot(deg2_gsea, label_format = 50,showCategory = 20)
+
 
