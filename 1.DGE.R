@@ -105,18 +105,22 @@ for(coefi in 1:3){
     title <- "LMS vs DDLPS"
     deg_leiomyo_lipo <- df_to_save
     write.csv(df_to_save, "RESULTS/deg_leiomyo_lipo.csv")
+    deg_leiomyo_lipo_degs <- df_to_save[df_to_save$adj.P.Val<0.05,]
+    write.csv(deg_leiomyo_lipo_degs, "RESULTS/deg_leiomyo_lipo_sign.csv")
   } else if (coefi == 2) {
     title <- "UPS vs LMS"
     deg_ups_leiomyo <- df_to_save
     write.csv(df_to_save, "RESULTS/deg_ups_leiomyo.csv")
+    deg_ups_leiomyo_sign <- df_to_save[df_to_save$adj.P.Val<0.05,]
+    write.csv(deg_ups_leiomyo_sign, "RESULTS/deg_ups_leiomyo_sign.csv")
   } else if (coefi == 3) {
     title <- "UPS vs DDLPS"
     deg_ups_lipo <- df_to_save
-    write.csv(df_to_save, "RESULTS/deg_ups_lipo.csv")
+    deg_ups_lipo_degs <- df_to_save[df_to_save$adj.P.Val<0.05,]
+    write.csv(deg_ups_lipo_degs, "RESULTS/deg_ups_ddlps_sign.csv")
   }
-  
   for (i in 1:length(rownames(deg))) {
-    if (y[i] <= 0.05 && x[i] %in% metabolic_genes$gene_symbol){
+    if (y[i] <= 0.05){ #&& x[i] %in% metabolic_genes$gene_symbol
       #x[i] <- ""
       df <- rbind(df, c(x[i],y[i], log[i]))
     } else{
@@ -128,7 +132,7 @@ for(coefi in 1:3){
   print(title)
   print(length(row.names(df)))
   
-  #print(mean(deg$logFC))
+  print(mean(deg$logFC))
   
   vulcano <- EnhancedVolcano(
     deg,
