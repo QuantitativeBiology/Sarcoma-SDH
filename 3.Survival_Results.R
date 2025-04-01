@@ -40,13 +40,17 @@ clinical_data_clean$SDHC <- ifelse(clinical_data_clean$SDHC_val > mean(clinical_
 clinical_data_clean$SDHD <- ifelse(clinical_data_clean$SDHD_val > mean(clinical_data_clean$SDHD_val), "High", "Low")
 
 
-km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean)
+km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHD, data=clinical_data_clean)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
-                title = "Overall Survival SDHB")
-x
+                title = "Overall Survival SDHD")
 
 clinical_data_clean$`Local Recurrence` <- as.character(clinical_data_clean$`Local Recurrence`)
+
+
+#clinical_data_clean$SDHB <- relevel(clinical_data_clean$SDHB, ref = "Low")
+
+clinical_data_clean$SDHB <- factor(clinical_data_clean$SDHB, levels = c("Low", "High"))
 
 cox <- coxph(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~  Gender + `Sarcoma Histopathological Subtype` + SDHB +  `Neo Adjuvant / Adjuvant Treatment` + `Local Recurrence`  , data = clinical_data_clean)
 ggforest(cox, fontsize = 1)
@@ -59,10 +63,10 @@ clinical_data_clean_mfs <- clinical_data_clean_mfs[clinical_data_clean_mfs$TIME_
 
 clinical_data_clean_mfs$Distant_Recurrence <- clinical_data_clean_mfs$`Distant Recurrence`
 
-km_fit <- survfit(Surv(TIME_TO_METASTISIS, Distant_Recurrence) ~ SDHB, data=clinical_data_clean_mfs)
+km_fit <- survfit(Surv(TIME_TO_METASTISIS, Distant_Recurrence) ~ SDHD, data=clinical_data_clean_mfs)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
-                title = "Metastastis Free Survival SDHB")
+                title = "Metastastis Free Survival SDHD")
 x
 
 clinical_data_clean_rfs <- clinical_data_clean
@@ -77,10 +81,10 @@ clinical_data_clean_rfs$TIME_TO_LOCAL_RECURRENCE <- as.Date(clinical_data_clean_
 
 clinical_data_clean_rfs <- clinical_data_clean_rfs[clinical_data_clean_rfs$TIME_TO_LOCAL_RECURRENCE > 0,]
 
-km_fit <- survfit(Surv(TIME_TO_LOCAL_RECURRENCE, Local_Recurrence) ~ SDHB, data=clinical_data_clean_rfs)
+km_fit <- survfit(Surv(TIME_TO_LOCAL_RECURRENCE, Local_Recurrence) ~ SDHD, data=clinical_data_clean_rfs)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
-                title = "Recurrence Free Survival SDHB")
+                title = "Recurrence Free Survival SDHD")
 x
 
 # Calculate PFS #
@@ -112,10 +116,10 @@ for (patient in row.names(clinical_data_pfs)){
   }
 }
 
-km_fit <- survfit(Surv(TIME_PFS, PFS) ~ SDHB, data=clinical_data_pfs)
+km_fit <- survfit(Surv(TIME_PFS, PFS) ~ SDHC, data=clinical_data_pfs)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
-                title = "Progression Free Survival SDHB")
+                title = "Progression Free Survival SDHC")
 x
 
 
@@ -123,13 +127,20 @@ x
 
 clinical_data_clean_ups <- clinical_data_clean[clinical_data_clean$`Sarcoma Histopathological Subtype` == "UPS",]
 
-clinical_data_clean_ups$SDHB <- ifelse(clinical_data_clean_ups$SDHB_val > mean(clinical_data_clean_ups$SDHB_val), "High", "Low")
 
-km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHB, data=clinical_data_clean_ups)
+
+clinical_data_clean_ups$SDHA <- ifelse(clinical_data_clean_ups$SDHA_val > mean(clinical_data_clean_ups$SDHA_val), "High", "Low")
+clinical_data_clean_ups$SDHB <- ifelse(clinical_data_clean_ups$SDHB_val > mean(clinical_data_clean_ups$SDHB_val), "High", "Low")
+clinical_data_clean_ups$SDHC <- ifelse(clinical_data_clean_ups$SDHC_val > mean(clinical_data_clean_ups$SDHC_val), "High", "Low")
+clinical_data_clean_ups$SDHD <- ifelse(clinical_data_clean_ups$SDHD_val > mean(clinical_data_clean_ups$SDHD_val), "High", "Low")
+
+km_fit <- survfit(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~ SDHA, data=clinical_data_clean_ups)
 
 x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
                 title = "Overall Free Survival SDHB: UPS")
 x
+
+clinical_data_clean_ups$SDHB <- factor(clinical_data_clean_ups$SDHB, levels = c("Low", "High"))
 
 cox <- coxph(Surv(TIME_DEATH_FROM_SURGERY, Morte.S.N) ~  Gender + SDHB +  `Neo Adjuvant / Adjuvant Treatment` + `Local Recurrence`  , data = clinical_data_clean_ups)
 ggforest(cox, fontsize = 1)
@@ -215,6 +226,7 @@ x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE,
                 title = "Overall Survival From Metastasis Date SDHB: UPS")
 x
 
+clinical_data_clean_ups$SDHB <- factor(clinical_data_clean_ups$SDHB, levels = c("Low", "High"))
 
 cox <- coxph(Surv(TIME_FROM_METASTISIS_DEATH, Morte.S.N) ~  Gender + SDHB +  `Neo Adjuvant / Adjuvant Treatment` + `Local Recurrence`  , data = clinical_data_clean_ups)
 ggforest(cox, fontsize = 1)

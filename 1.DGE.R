@@ -19,6 +19,8 @@ output_file <- "FILES/normalized_counts.csv"
 RNA_data <- read.csv("FILES/22-2290 Roche RNA GEP-COUNTS 01MAY2023.txt", sep = "\t")
 DNA_data <- read_excel("FILES/OSPL_n=82_F1CDXRNA-RMC-RET-22-2290_SG44174_21FEB2023145617.xlsx")
 
+clinical_data_clean <- read.csv("FILES/clinical_data_clean.csv", row.names=1)
+
 # Filter DNA data
 DNA_data <- DNA_data[DNA_data$`PASS/QUALIFIED STATUS_DNA` != "Fail", ]
 
@@ -64,20 +66,18 @@ keep <- filterByExpr(RNA_data, design = design)
 RNA_data <- RNA_data[keep, ]
 
 # Apply voom transformation
-Voom <- voom(RNA_data, plot = FALSE, normalize.method = "quantile")
+Voom <- voom(RNA_data, design = design, plot = FALSE, normalize.method = "quantile")
 
 Voom <- data.frame(Voom$E)
 
 # Remove outlier
-Voom <- Voom[, colnames(Voom) != "X1.102.1"]
+#Voom <- Voom[, colnames(Voom) != "X1.102.1"]
 Voom <- data.frame(Voom)
 
 # )
 cont.matrix <- makeContrasts(disease_leimyo-disease_lipo,
                              disease_nos-disease_leimyo,
                              disease_nos-disease_lipo, levels=design)
-
-Voom <- voom(RNA_data, plot = FALSE,normalize.method = "quantile")
 
 vfit <- lmFit(Voom, design)
 vfit  <- contrasts.fit(vfit,cont.matrix)
@@ -175,6 +175,8 @@ DNA_data$DISEASE <- ifelse(DNA_data$DISEASE == "Soft tissue leiomyosarcoma", "LM
 DNA_data$DISEASE <- ifelse(DNA_data$DISEASE == "Soft tissue liposarcoma", "DDLPS", DNA_data$DISEASE)
 
 voom_dataframe$subtype <- DNA_data$DISEASE
+
+write.csv(voom_dataframe,"voom_dataframe_with_labels.csv")
 
 # Ensure subtype is treated as a factor (if it's not already)
 voom_dataframe$subtype <- factor(voom_dataframe$subtype)
@@ -305,3 +307,6 @@ for (gene in genes) {
   
   print(x)
 }
+
+
+
