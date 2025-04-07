@@ -266,6 +266,17 @@ p <- ggplot(voom_long, aes(x = subtype, y = Expression, fill = subtype)) +
 
 print(p)
 
+
+pfs_mfs_data <- read.csv("FILES/TCGA_clinical_data_updated.csv")
+
+pfs_mfs_data$barcode <- gsub("-", ".", pfs_mfs_data$barcode)
+
+row.names(pfs_mfs_data) <- pfs_mfs_data$barcode
+
+pfs_mfs_data <- pfs_mfs_data[clinical_data$Patient,]
+
+voom_df$TIME_TO_METASTISIS <- pfs_mfs_data$distant_recurrence_time
+voom_df$METASTISIS <- pfs_mfs_data$distant_recurrence
 voom_df$TIME_DEATH_FROM_SURGERY <- clinical_data$Last_FU
 
 voom_df$DEATH <- clinical_data$Status
@@ -314,7 +325,17 @@ x
 
 voom_df$SDHB <- factor(voom_df$SDHB, levels = c("Low", "High"))
 
+cox <- coxph(Surv(TIME_TO_METASTISIS, METASTISIS) ~ FNCLCC_GRADE + SDHB + Gender , data = voom_df)
+ggforest(cox, fontsize = 1)
+
+km_fit <- survfit(Surv(TIME_TO_METASTISIS,METASTISIS) ~ SDHB, data=voom_df)
+
+x <- ggsurvplot(km_fit,pval=TRUE,risk.table=TRUE, conf.int = TRUE, 
+                title = "Overall Survival SDHB: Only UPS")
+x
+
 cox <- coxph(Surv(TIME_DEATH_FROM_SURGERY, DEATH) ~ FNCLCC_GRADE + SDHB + Gender , data = voom_df)
 ggforest(cox, fontsize = 1)
+
 
 
